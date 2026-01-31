@@ -6,7 +6,7 @@ async function testGemini() {
   try {
     console.log('Testing Gemini API...');
     
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     
     const result = await model.generateContent('Say hello in 5 words');
     const response = result.response;
