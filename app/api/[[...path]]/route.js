@@ -15,7 +15,22 @@ async function connectToMongo() {
   }
   return db
 }
-
+// Add this Helper Function at the top of route.js
+async function generateWithRetry(model, prompt, retries = 3, delay = 2000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (error) {
+      const isOverloaded = error.message.includes('503') || error.message.includes('429');
+      if (isOverloaded && i < retries - 1) {
+        console.log(`⚠️ Model overloaded. Retrying in ${delay/1000}s... (Attempt ${i + 1}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error; // If not a temporary error, crash immediately
+    }
+  }
+}
 // Helper function to handle CORS
 function handleCORS(response) {
   response.headers.set('Access-Control-Allow-Origin', process.env.CORS_ORIGINS || '*')
@@ -606,7 +621,7 @@ def test_login_invalid_credentials():
 class ArchaeologistAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0.4,
         maxOutputTokens: 8192,
@@ -676,7 +691,7 @@ Return a JSON object with this exact structure:
 Be thorough and extract as much information as possible. Return ONLY the JSON object, no additional text.`
 
     try {
-      const result = await this.model.generateContent(prompt)
+      const result = await generateWithRetry(this.model, prompt);
       const responseText = result.response.text()
       
       // Extract JSON from response
@@ -699,10 +714,11 @@ Be thorough and extract as much information as possible. Return ONLY the JSON ob
 class ArchitectAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0.6,
         maxOutputTokens: 8192,
+      
       }
     })
   }
@@ -788,7 +804,7 @@ Generate a Migration Blueprint in this JSON structure:
 Return ONLY the JSON object, no additional text.`
 
     try {
-      const result = await this.model.generateContent(prompt)
+      const result = await generateWithRetry(this.model, prompt);
       const responseText = result.response.text()
       
       // Extract JSON from response
@@ -811,7 +827,7 @@ Return ONLY the JSON object, no additional text.`
 class BuilderAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 8192,
@@ -862,7 +878,7 @@ Return a JSON object with this structure:
 Return ONLY the JSON object, no additional text.`
 
     try {
-      const result = await this.model.generateContent(prompt)
+      const result = await generateWithRetry(this.model, prompt);
       const responseText = result.response.text()
       
       // Extract JSON from response
@@ -872,11 +888,20 @@ Return ONLY the JSON object, no additional text.`
       }
       
       const codeOutput = JSON.parse(jsonMatch[0])
+
+      // --- 🛡️ SAFETY CHECK ADDED HERE ---
+      // If the AI forgot the 'files' array, throw error to trigger the backup
+      if (!codeOutput.files || !Array.isArray(codeOutput.files) || codeOutput.files.length === 0) {
+        throw new Error('AI response missing valid files array')
+      }
+      // ----------------------------------
+
       codeOutput.mode = 'AI_POWERED'
       return codeOutput
+
     } catch (error) {
       console.error('Builder error (falling back to demo mode):', error.message)
-      // Fallback to simulated response for demo
+      // This fallback ensures you ALWAYS get files to download
       return getSimulatedCodeOutput(blueprint, phase)
     }
   }
@@ -900,7 +925,7 @@ Analyze the errors and provide a fixed version of the code. Return JSON:
 Return ONLY the JSON object, no additional text.`
 
     try {
-      const result = await this.model.generateContent(prompt)
+      const result = await generateWithRetry(this.model, prompt)
       const responseText = result.response.text()
       
       let jsonMatch = responseText.match(/\{[\s\S]*\}/)
