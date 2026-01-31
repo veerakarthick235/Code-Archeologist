@@ -18,7 +18,9 @@ import {
   Download, 
   Play, 
   CheckCircle2, 
+  CheckCircle,
   AlertCircle,
+  ShieldCheck,
   Loader2,
   GitBranch,
   Database,
@@ -28,7 +30,7 @@ import {
 } from 'lucide-react'
 import ReactFlow, { 
   Background, 
-  Controls,
+  Controls, 
   MiniMap 
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -93,6 +95,38 @@ export default function App() {
       timestamp: new Date().toLocaleTimeString()
     }])
   }
+
+  // ================== DOWNLOAD HELPERS ==================
+  const downloadFile = (content, filename, type = 'application/json') => {
+    const blob = new Blob([type === 'application/json' ? JSON.stringify(content, null, 2) : content], { type })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const downloadAudit = () => {
+    if (currentProject?.auditReport) {
+      downloadFile(currentProject.auditReport, `${currentProject.projectName}_Audit.json`)
+    }
+  }
+
+  const downloadBlueprint = () => {
+    if (currentProject?.blueprint?.blueprintMarkdown) {
+      downloadFile(currentProject.blueprint.blueprintMarkdown, `${currentProject.projectName}_Blueprint.md`, 'text/markdown')
+    }
+  }
+
+  const downloadCode = () => {
+    if (currentProject?.generatedCode) {
+      downloadFile(currentProject.generatedCode, `${currentProject.projectName}_Modern_Code.json`)
+    }
+  }
+  // ======================================================
 
   const createProject = async () => {
     if (!projectName.trim() || !legacyCode.trim()) {
@@ -231,7 +265,14 @@ export default function App() {
       })
       
       const result = await response.json()
-      setCurrentProject(prev => ({ ...prev, ...result }))
+      
+      // --- 🔧 FIX: Map 'codeOutput' to 'generatedCode' ---
+      setCurrentProject(prev => ({ 
+        ...prev, 
+        ...result,
+        generatedCode: result.codeOutput // <--- THIS LINE FIXES THE "0 FILES" ISSUE
+      }))
+      // ---------------------------------------------------
       
       // Add build iteration logs
       result.buildIterations?.forEach((iteration, idx) => {
@@ -258,48 +299,6 @@ export default function App() {
     }
   }
 
-  const downloadAudit = () => {
-    if (!currentProject?.auditReport) return
-    
-    const blob = new Blob(
-      [JSON.stringify(currentProject.auditReport, null, 2)],
-      { type: 'application/json' }
-    )
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'LegacyAudit.json'
-    a.click()
-  }
-
-  const downloadBlueprint = () => {
-    if (!currentProject?.blueprint?.blueprintMarkdown) return
-    
-    const blob = new Blob(
-      [currentProject.blueprint.blueprintMarkdown],
-      { type: 'text/markdown' }
-    )
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'Blueprint.md'
-    a.click()
-  }
-
-  const downloadCode = () => {
-    if (!currentProject?.generatedCode) return
-    
-    const blob = new Blob(
-      [JSON.stringify(currentProject.generatedCode, null, 2)],
-      { type: 'application/json' }
-    )
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'GeneratedCode.json'
-    a.click()
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
@@ -320,7 +319,7 @@ export default function App() {
             <div className="flex gap-2">
               <Badge variant="outline" className="border-green-500/50 text-green-400">
                 <Sparkles className="w-3 h-3 mr-1" />
-                Gemini 2.0 Powered
+                Gemini 3 Powered
               </Badge>
               <Badge variant="outline" className="border-blue-500/50 text-blue-400">
                 Multi-Agent System
@@ -741,77 +740,120 @@ export default function App() {
           <TabsContent value="results" className="space-y-6">
             <Card className="bg-slate-900/50 border-slate-800">
               <CardHeader>
-                <CardTitle className="text-white">Migration Results</CardTitle>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Database className="h-5 w-5 text-blue-400" />
+                  Migration Results
+                </CardTitle>
                 <CardDescription>
-                  Download generated code and artifacts
+                  Download generated code, documentation, and artifacts
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {currentPhase === 'complete' && currentProject?.generatedCode ? (
-                  <>
-                    <Alert className="bg-blue-950/50 border-blue-800">
-                      <Database className="h-4 w-4 text-blue-400" />
-                      <AlertTitle className="text-blue-400">Migration Complete</AlertTitle>
-                      <AlertDescription className="text-blue-300">
-                        Your modern codebase is ready for download
+                {/* CHECK: Only show results if the phase is complete or we have code */}
+                {(currentPhase === 'complete' || currentProject?.generatedCode) ? (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                    
+                    {/* Success Banner */}
+                    <Alert className="bg-blue-950/30 border-blue-800/50">
+                      <CheckCircle className="h-4 w-4 text-blue-400" />
+                      <AlertTitle className="text-blue-400">Migration Successful</AlertTitle>
+                      <AlertDescription className="text-blue-300/80">
+                        The legacy codebase has been successfully analyzed, re-architected, and rewritten.
                       </AlertDescription>
                     </Alert>
 
-                    <div className="grid gap-3">
+                    {/* Download Buttons Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Button
                         onClick={downloadAudit}
                         variant="outline"
-                        className="w-full justify-start border-slate-700"
+                        className="h-auto py-4 flex flex-col items-start gap-1 border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:text-blue-400 transition-colors"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Legacy Audit Report (JSON)
+                        <div className="flex items-center gap-2 font-semibold">
+                          <ShieldCheck className="w-4 h-4" />
+                          Audit Report
+                        </div>
+                        <span className="text-xs text-slate-500 font-normal">Security & Dependency Analysis</span>
                       </Button>
 
                       <Button
                         onClick={downloadBlueprint}
                         variant="outline"
-                        className="w-full justify-start border-slate-700"
+                        className="h-auto py-4 flex flex-col items-start gap-1 border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:text-purple-400 transition-colors"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Migration Blueprint (Markdown)
+                        <div className="flex items-center gap-2 font-semibold">
+                          <FileCode className="w-4 h-4" />
+                          Blueprint
+                        </div>
+                        <span className="text-xs text-slate-500 font-normal">Architecture & Implementation Plan</span>
                       </Button>
 
                       <Button
                         onClick={downloadCode}
                         variant="outline"
-                        className="w-full justify-start border-slate-700"
+                        className="h-auto py-4 flex flex-col items-start gap-1 border-blue-900/50 bg-blue-950/20 hover:bg-blue-900/40 hover:text-blue-300 transition-colors"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Generated Code Repository (JSON)
+                        <div className="flex items-center gap-2 font-semibold">
+                          <Download className="w-4 h-4" />
+                          Source Code
+                        </div>
+                        <span className="text-xs text-slate-500 font-normal">Full Python/Next.js Repository</span>
                       </Button>
                     </div>
 
-                    <Card className="bg-slate-950/50 border-slate-700">
-                      <CardHeader>
-                        <CardTitle className="text-sm text-slate-300">Generated Files</CardTitle>
+                    {/* Generated Files List */}
+                    <Card className="bg-slate-950/30 border-slate-800">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-slate-400 flex justify-between items-center">
+                          <span>Generated Artifacts</span>
+                          <span className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300">
+                            {currentProject?.generatedCode?.files?.length || 0} Files
+                          </span>
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ScrollArea className="h-[300px]">
-                          <div className="space-y-2">
-                            {currentProject.generatedCode.files?.map((file, idx) => (
-                              <div key={idx} className="text-sm">
-                                <p className="font-mono text-blue-400">{file.path}</p>
-                                <p className="text-slate-500 text-xs ml-4">{file.description}</p>
+                        <ScrollArea className="h-[250px] w-full rounded-md border border-slate-800 bg-slate-900/50 p-4">
+                          <div className="space-y-3">
+                            {currentProject.generatedCode?.files?.map((file, idx) => (
+                              <div key={idx} className="flex items-start gap-3 group">
+                                <div className="mt-1">
+                                  <FileCode className="w-4 h-4 text-slate-600 group-hover:text-blue-400 transition-colors" />
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                  <p className="text-sm font-mono text-slate-300 group-hover:text-blue-300 transition-colors">
+                                    {file.path}
+                                  </p>
+                                  <p className="text-xs text-slate-600 line-clamp-1">
+                                    {file.description}
+                                  </p>
+                                </div>
                               </div>
                             ))}
                           </div>
                         </ScrollArea>
                       </CardContent>
                     </Card>
-                  </>
+                  </div>
                 ) : (
-                  <Alert className="bg-slate-800/50 border-slate-700">
-                    <AlertCircle className="h-4 w-4 text-slate-400" />
-                    <AlertTitle className="text-slate-400">No Results Yet</AlertTitle>
-                    <AlertDescription className="text-slate-500">
-                      Complete the migration process to see results
-                    </AlertDescription>
-                  </Alert>
+                  /* Empty State */
+                  <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                    <div className="h-12 w-12 rounded-full bg-slate-800/50 flex items-center justify-center">
+                      <AlertCircle className="h-6 w-6 text-slate-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-semibold text-slate-300">No Results Yet</h3>
+                      <p className="text-sm text-slate-500 max-w-sm">
+                        Complete the <strong>Build</strong> phase to generate the modern codebase and view the results here.
+                      </p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => document.querySelector('[value="build"]').click()} // Quick hack to jump tabs
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      Go to Build Tab
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
