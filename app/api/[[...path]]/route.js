@@ -798,10 +798,12 @@ Return ONLY the JSON object, no additional text.`
       }
       
       const blueprint = JSON.parse(jsonMatch[0])
+      blueprint.mode = 'AI_POWERED'
       return blueprint
     } catch (error) {
-      console.error('Architect error:', error)
-      throw error
+      console.error('Architect error (falling back to demo mode):', error.message)
+      // Fallback to simulated response for demo
+      return getSimulatedBlueprint(auditReport)
     }
   }
 }
