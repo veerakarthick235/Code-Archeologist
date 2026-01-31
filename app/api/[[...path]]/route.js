@@ -129,7 +129,7 @@ Be thorough and extract as much information as possible. Return ONLY the JSON ob
 class ArchitectAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       generationConfig: {
         temperature: 0.6,
         maxOutputTokens: 8192,
