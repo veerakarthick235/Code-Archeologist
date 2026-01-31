@@ -38,7 +38,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 class ArchaeologistAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       generationConfig: {
         temperature: 0.4,
         maxOutputTokens: 8192,
