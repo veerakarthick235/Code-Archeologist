@@ -468,6 +468,11 @@ export default function App() {
                       <AlertTitle className="text-blue-400">Analysis Complete</AlertTitle>
                       <AlertDescription className="text-blue-300">
                         Generated comprehensive audit report with security findings
+                        {currentProject.auditReport.mode === 'SIMULATED' && (
+                          <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">
+                            DEMO MODE
+                          </span>
+                        )}
                       </AlertDescription>
                     </Alert>
 
