@@ -4,7 +4,7 @@
 
 An advanced multi-agent system powered by Google Gemini AI that automatically analyzes, architects, and migrates legacy codebases to modern stacks.
 
-[![Gemini 2.0](https://img.shields.io/badge/Gemini-2.0%20Powered-4285F4?logo=google)](https://ai.google.dev)
+[![Gemini 3.0](https://img.shields.io/badge/Gemini-2.0%20Powered-4285F4?logo=google)](https://ai.google.dev)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Target-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 
