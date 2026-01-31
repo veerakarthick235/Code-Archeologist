@@ -479,7 +479,7 @@ This is a hackathon/demo project showcasing multi-agent AI systems. Potential im
 - [ ] Diff viewer for old vs. new code
 
 **AI Enhancements:**
-- [ ] Gemini 2.5 Pro for complex reasoning
+- [ ] Gemini 3 for complex reasoning
 - [ ] Fine-tuned models for specific languages
 - [ ] Custom thought signature patterns
 - [ ] Multi-language blueprint templates
@@ -511,9 +511,9 @@ MIT License - feel free to use this for learning, demos, and hackathons!
 ## 📧 Contact & Support
 
 For questions, issues, or collaboration:
-- GitHub Issues: [Your repo]
-- Email: [Your email]
-- Demo: [Deployment URL]
+- GitHub Issues: [https://github.com/veerakarthick235/Code-Archeologist]
+- Email: [veerakarthick235@gmail.com]
+- Demo: [https://code-archeologist-ten.vercel.app/]
 
 ---
 
