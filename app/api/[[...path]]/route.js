@@ -686,10 +686,12 @@ Be thorough and extract as much information as possible. Return ONLY the JSON ob
       }
       
       const auditReport = JSON.parse(jsonMatch[0])
+      auditReport.mode = 'AI_POWERED'
       return auditReport
     } catch (error) {
-      console.error('Archaeologist error:', error)
-      throw error
+      console.error('Archaeologist error (falling back to demo mode):', error.message)
+      // Fallback to simulated response for demo
+      return getSimulatedAuditReport(projectName, legacyCode)
     }
   }
 }
