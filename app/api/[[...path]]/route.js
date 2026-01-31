@@ -239,7 +239,7 @@ Return ONLY the JSON object, no additional text.`
 class BuilderAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 8192,
