@@ -33,6 +33,574 @@ export async function OPTIONS() {
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
+// ================== SIMULATED RESPONSES (DEMO MODE) ==================
+
+function getSimulatedAuditReport(projectName, legacyCode) {
+  const isPhp = legacyCode.includes('<?php') || legacyCode.includes('mysql_')
+  const isPython = legacyCode.includes('def ') || legacyCode.includes('import ')
+  const isCobol = legacyCode.toUpperCase().includes('COBOL') || legacyCode.includes('IDENTIFICATION DIVISION')
+  
+  return {
+    projectName,
+    detectedLanguage: isPhp ? 'PHP' : isPython ? 'Python 2.7' : isCobol ? 'COBOL' : 'Unknown',
+    frameworks: isPhp ? ['None (Procedural PHP)'] : isPython ? ['Flask', 'SQLAlchemy'] : ['Mainframe CICS'],
+    codeQualityScore: 32,
+    businessLogic: {
+      description: 'Legacy system with user management and payment processing',
+      keyFeatures: [
+        'User authentication and session management',
+        'Database operations with direct SQL queries',
+        'Payment processing with credit card handling',
+        'Admin panel with file inclusion'
+      ],
+      workflows: [
+        'User login → Session creation → Access control',
+        'Payment checkout → Card validation → Database storage',
+        'Admin authentication → Dynamic page loading'
+      ]
+    },
+    securityIssues: [
+      {
+        severity: 'high',
+        issue: 'SQL Injection vulnerability in user query',
+        location: 'Line 7: Direct GET parameter concatenation',
+        recommendation: 'Use prepared statements or parameterized queries'
+      },
+      {
+        severity: 'high',
+        issue: 'Hard-coded database credentials',
+        location: 'Lines 3-4: Plaintext password in source code',
+        recommendation: 'Move credentials to environment variables'
+      },
+      {
+        severity: 'critical',
+        issue: 'Storing credit card numbers in plaintext',
+        location: 'process_payment() function',
+        recommendation: 'Use PCI-DSS compliant payment gateway, never store raw card data'
+      },
+      {
+        severity: 'high',
+        issue: 'File inclusion vulnerability',
+        location: 'Admin panel: include($_GET["page"])',
+        recommendation: 'Use whitelist approach for including files'
+      },
+      {
+        severity: 'medium',
+        issue: 'Session hijacking risk',
+        location: 'Weak session validation',
+        recommendation: 'Implement proper session management with secure tokens'
+      }
+    ],
+    deprecatedDependencies: [
+      {
+        name: 'mysql_*() functions',
+        currentVersion: 'PHP 4/5 (deprecated)',
+        recommendedVersion: 'MySQLi or PDO',
+        securityRisk: 'high'
+      },
+      {
+        name: 'Direct $_GET access',
+        currentVersion: 'Legacy approach',
+        recommendedVersion: 'Filter and sanitize all inputs',
+        securityRisk: 'high'
+      }
+    ],
+    codeSmells: [
+      'No input validation or sanitization',
+      'Missing error handling',
+      'No code organization (procedural spaghetti)',
+      'Direct database credentials in code',
+      'No separation of concerns',
+      'Missing HTTPS enforcement',
+      'No CSRF protection'
+    ],
+    databaseSchema: {
+      detected: true,
+      tables: ['users', 'payments', 'sessions', 'admin_logs'],
+      relationships: [
+        'users → payments (one-to-many)',
+        'users → sessions (one-to-many)'
+      ]
+    },
+    apiEndpoints: [
+      'GET /?id= (User retrieval - VULNERABLE)',
+      'POST /checkout (Payment processing)',
+      'GET /admin?page= (Admin panel - VULNERABLE)'
+    ],
+    dependencyGraph: {
+      nodes: [
+        { id: 'main', label: 'Main Script', type: 'entry' },
+        { id: 'db', label: 'Database Connection', type: 'module' },
+        { id: 'auth', label: 'Authentication', type: 'module' },
+        { id: 'payment', label: 'Payment Processing', type: 'module' },
+        { id: 'admin', label: 'Admin Panel', type: 'module' }
+      ],
+      edges: [
+        { source: 'main', target: 'db', label: 'uses' },
+        { source: 'main', target: 'auth', label: 'calls' },
+        { source: 'auth', target: 'db', label: 'queries' },
+        { source: 'payment', target: 'db', label: 'writes' },
+        { source: 'admin', target: 'auth', label: 'requires' }
+      ]
+    },
+    migrationComplexity: 'high',
+    estimatedEffort: '3-4 weeks for core migration + 2 weeks security hardening',
+    mode: 'SIMULATED'
+  }
+}
+
+function getSimulatedBlueprint(auditReport) {
+  return {
+    projectName: auditReport.projectName,
+    targetStack: {
+      backend: 'Python 3.12 + FastAPI',
+      frontend: 'React (Next.js 14) + TypeScript',
+      database: 'PostgreSQL 15 with Prisma ORM',
+      authentication: 'JWT + OAuth2 with refresh tokens',
+      deployment: 'Docker + Kubernetes'
+    },
+    architecturalDesign: {
+      pattern: 'Microservices with API Gateway',
+      reasoning: 'The legacy system mixes multiple concerns. A microservices approach allows us to separate authentication, payment processing, and user management into independent, scalable services. This also enables gradual migration and better fault isolation.',
+      components: [
+        'API Gateway (FastAPI)',
+        'Authentication Service (OAuth2 + JWT)',
+        'User Service (CRUD operations)',
+        'Payment Service (PCI-compliant gateway integration)',
+        'Admin Service (Role-based access control)'
+      ]
+    },
+    databaseDesign: {
+      models: [
+        {
+          name: 'User',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: 'PRIMARY KEY' },
+            { name: 'username', type: 'VARCHAR(100)', constraints: 'UNIQUE, NOT NULL' },
+            { name: 'email', type: 'VARCHAR(255)', constraints: 'UNIQUE, NOT NULL' },
+            { name: 'password_hash', type: 'VARCHAR(255)', constraints: 'NOT NULL' },
+            { name: 'created_at', type: 'TIMESTAMP', constraints: 'DEFAULT NOW()' },
+            { name: 'updated_at', type: 'TIMESTAMP', constraints: 'DEFAULT NOW()' }
+          ],
+          relationships: ['Has many payments', 'Has many sessions']
+        },
+        {
+          name: 'Payment',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: 'PRIMARY KEY' },
+            { name: 'user_id', type: 'UUID', constraints: 'FOREIGN KEY REFERENCES users(id)' },
+            { name: 'amount', type: 'DECIMAL(10,2)', constraints: 'NOT NULL' },
+            { name: 'payment_method', type: 'VARCHAR(50)', constraints: 'NOT NULL' },
+            { name: 'stripe_payment_intent', type: 'VARCHAR(255)', constraints: 'UNIQUE' },
+            { name: 'status', type: 'ENUM', constraints: 'pending|completed|failed' },
+            { name: 'created_at', type: 'TIMESTAMP', constraints: 'DEFAULT NOW()' }
+          ],
+          relationships: ['Belongs to user']
+        },
+        {
+          name: 'Session',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: 'PRIMARY KEY' },
+            { name: 'user_id', type: 'UUID', constraints: 'FOREIGN KEY REFERENCES users(id)' },
+            { name: 'token', type: 'VARCHAR(500)', constraints: 'UNIQUE, NOT NULL' },
+            { name: 'expires_at', type: 'TIMESTAMP', constraints: 'NOT NULL' },
+            { name: 'created_at', type: 'TIMESTAMP', constraints: 'DEFAULT NOW()' }
+          ],
+          relationships: ['Belongs to user']
+        }
+      ],
+      migrations: 'Use Prisma migrations for version control and rollback capability'
+    },
+    apiDesign: {
+      endpoints: [
+        { method: 'POST', path: '/api/auth/register', description: 'User registration with email verification', authentication: 'none' },
+        { method: 'POST', path: '/api/auth/login', description: 'User login returning JWT access & refresh tokens', authentication: 'none' },
+        { method: 'POST', path: '/api/auth/refresh', description: 'Refresh access token', authentication: 'refresh_token' },
+        { method: 'GET', path: '/api/users/me', description: 'Get current user profile', authentication: 'required' },
+        { method: 'PUT', path: '/api/users/me', description: 'Update user profile', authentication: 'required' },
+        { method: 'POST', path: '/api/payments/intent', description: 'Create Stripe payment intent', authentication: 'required' },
+        { method: 'POST', path: '/api/payments/confirm', description: 'Confirm payment completion', authentication: 'required' },
+        { method: 'GET', path: '/api/payments/history', description: 'Get user payment history', authentication: 'required' },
+        { method: 'GET', path: '/api/admin/users', description: 'List all users', authentication: 'admin_required' },
+        { method: 'GET', path: '/api/admin/stats', description: 'System statistics', authentication: 'admin_required' }
+      ],
+      authentication: 'JWT-based with role-based access control (RBAC)'
+    },
+    frontendStructure: {
+      pages: [
+        '/login - Authentication page',
+        '/register - User registration',
+        '/dashboard - User dashboard',
+        '/payments - Payment management',
+        '/admin - Admin panel (protected)'
+      ],
+      components: [
+        'AuthForm - Reusable authentication forms',
+        'PaymentCard - Payment method display',
+        'UserTable - Admin user management',
+        'ProtectedRoute - Route authentication wrapper'
+      ],
+      stateManagement: 'React Context API + SWR for data fetching'
+    },
+    fileStructure: {
+      backend: [
+        'app/main.py - FastAPI application entry',
+        'app/routers/auth.py - Authentication endpoints',
+        'app/routers/users.py - User management',
+        'app/routers/payments.py - Payment processing',
+        'app/routers/admin.py - Admin operations',
+        'app/models/ - Prisma models',
+        'app/services/auth_service.py - Auth business logic',
+        'app/services/payment_service.py - Payment integration',
+        'app/middleware/auth.py - JWT verification',
+        'app/utils/security.py - Password hashing, validation',
+        'tests/ - Unit and integration tests'
+      ],
+      frontend: [
+        'app/page.tsx - Landing page',
+        'app/login/page.tsx - Login page',
+        'app/dashboard/page.tsx - User dashboard',
+        'app/payments/page.tsx - Payments page',
+        'components/AuthForm.tsx',
+        'components/PaymentCard.tsx',
+        'lib/api.ts - API client',
+        'lib/auth.ts - Auth utilities',
+        'contexts/AuthContext.tsx'
+      ]
+    },
+    implementationPhases: [
+      {
+        phase: 'Phase 1: Foundation',
+        description: 'Set up project structure, database, and authentication',
+        files: ['FastAPI setup', 'Prisma schema', 'JWT auth', 'User model & routes'],
+        duration: '1 week'
+      },
+      {
+        phase: 'Phase 2: Core Features',
+        description: 'Implement user management and basic frontend',
+        files: ['User CRUD operations', 'Next.js setup', 'Protected routes', 'Dashboard UI'],
+        duration: '1 week'
+      },
+      {
+        phase: 'Phase 3: Payment Integration',
+        description: 'Integrate Stripe and implement payment flows',
+        files: ['Stripe integration', 'Payment endpoints', 'Payment UI', 'Webhooks'],
+        duration: '1 week'
+      },
+      {
+        phase: 'Phase 4: Admin & Polish',
+        description: 'Admin panel, testing, and security hardening',
+        files: ['Admin routes', 'RBAC implementation', 'Security audit', 'Testing suite'],
+        duration: '1 week'
+      }
+    ],
+    thoughtSignatures: {
+      keyDecisions: [
+        'Chose FastAPI over Flask for better async support and automatic API documentation',
+        'PostgreSQL over MongoDB for ACID compliance in payment transactions',
+        'Microservices pattern to isolate security-critical payment processing',
+        'Stripe integration instead of raw card handling for PCI compliance',
+        'JWT with refresh tokens for stateless auth with improved security'
+      ],
+      tradeoffs: [
+        'Microservices add complexity but provide better security isolation',
+        'TypeScript adds learning curve but catches errors early',
+        'Stripe has fees but eliminates PCI compliance burden',
+        'Server-side rendering (Next.js) vs SPA trade-off: chose Next.js for SEO and initial load performance'
+      ],
+      reasoning: 'The legacy code has critical security flaws that require a complete architectural rethink. Rather than patching vulnerabilities, we\'re building a modern, secure-by-design system. The microservices approach allows us to isolate the payment processing service with additional security measures while keeping the codebase maintainable.'
+    },
+    securityConsiderations: [
+      'All passwords hashed with bcrypt (min 12 rounds)',
+      'JWT tokens with short expiration (15 min) + refresh tokens',
+      'HTTPS enforced for all communications',
+      'Input validation using Pydantic models',
+      'SQL injection prevention via ORM',
+      'CSRF protection with SameSite cookies',
+      'Rate limiting on authentication endpoints',
+      'Content Security Policy (CSP) headers',
+      'Regular security audits and dependency updates'
+    ],
+    testingStrategy: 'Unit tests with pytest, integration tests for API endpoints, E2E tests with Playwright, security scanning with Bandit',
+    blueprintMarkdown: `# Migration Blueprint: ${auditReport.projectName}
+
+## Executive Summary
+Complete modernization of legacy PHP application to a secure, scalable Python/FastAPI + Next.js stack.
+
+## Architecture
+- **Pattern**: Microservices with API Gateway
+- **Target Stack**: Python 3.12 + FastAPI + PostgreSQL + Next.js 14 + TypeScript
+
+## Security Improvements
+- ✅ Eliminate SQL injection with ORM
+- ✅ Replace hard-coded credentials with environment variables
+- ✅ PCI-compliant payment processing via Stripe
+- ✅ Secure JWT-based authentication
+- ✅ Comprehensive input validation
+
+## Implementation Timeline
+**Total Duration**: 4 weeks
+- Phase 1: Foundation (1 week)
+- Phase 2: Core Features (1 week)
+- Phase 3: Payment Integration (1 week)
+- Phase 4: Admin & Polish (1 week)
+
+## Risk Mitigation
+- Gradual rollout with parallel legacy system
+- Comprehensive testing before production deployment
+- Database migration strategy with rollback plan
+`,
+    mode: 'SIMULATED'
+  }
+}
+
+function getSimulatedCodeOutput(blueprint, phase) {
+  return {
+    phase,
+    files: [
+      {
+        path: 'backend/app/main.py',
+        content: `from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import auth, users, payments, admin
+from app.database import engine
+from app.models import Base
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="${blueprint.projectName} API",
+    description="Modern, secure API built with FastAPI",
+    version="1.0.0"
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(payments.router, prefix="/api/payments", tags=["payments"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to ${blueprint.projectName} API",
+        "version": "1.0.0",
+        "status": "operational"
+    }
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+`,
+        description: 'FastAPI application entry point with router configuration'
+      },
+      {
+        path: 'backend/app/routers/auth.py',
+        content: `from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import User
+from app.schemas import UserCreate, Token
+from app.utils.security import verify_password, get_password_hash, create_access_token
+from datetime import timedelta
+
+router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if user exists
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create new user
+    hashed_password = get_password_hash(user.password)
+    db_user = User(
+        username=user.username,
+        email=user.email,
+        password_hash=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    return {"message": "User created successfully", "user_id": db_user.id}
+
+@router.post("/token", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=30)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+`,
+        description: 'Secure authentication endpoints with JWT'
+      },
+      {
+        path: 'frontend/app/login/page.tsx',
+        content: `'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ username, password })
+      })
+
+      if (!response.ok) {
+        throw new Error('Login failed')
+      }
+
+      const data = await response.json()
+      localStorage.setItem('access_token', data.access_token)
+      router.push('/dashboard')
+    } catch (err) {
+      setError('Invalid credentials')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className=\"min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800\">
+      <Card className=\"w-[400px]\">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+          <CardDescription>Enter your credentials to access your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className=\"space-y-4\">
+            <div>
+              <Input
+                type=\"text\"
+                placeholder=\"Username\"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Input
+                type=\"password\"
+                placeholder=\"Password\"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className=\"text-red-500 text-sm\">{error}</p>}
+            <Button type=\"submit\" className=\"w-full\" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+`,
+        description: 'Secure login page with form validation'
+      }
+    ],
+    tests: [
+      {
+        path: 'backend/tests/test_auth.py',
+        content: `import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_register_user():
+    response = client.post("/api/auth/register", json={
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "SecurePass123!"
+    })
+    assert response.status_code == 201
+    assert "user_id" in response.json()
+
+def test_login():
+    response = client.post("/api/auth/token", data={
+        "username": "testuser",
+        "password": "SecurePass123!"
+    })
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+def test_login_invalid_credentials():
+    response = client.post("/api/auth/token", data={
+        "username": "testuser",
+        "password": "wrongpassword"
+    })
+    assert response.status_code == 401
+`,
+        description: 'Authentication endpoint tests'
+      }
+    ],
+    dependencies: [
+      'fastapi==0.104.1',
+      'uvicorn==0.24.0',
+      'sqlalchemy==2.0.23',
+      'psycopg2-binary==2.9.9',
+      'python-jose[cryptography]==3.3.0',
+      'passlib[bcrypt]==1.7.4',
+      'python-multipart==0.0.6',
+      'stripe==7.4.0',
+      'pydantic==2.5.0',
+      'pytest==7.4.3'
+    ],
+    setupInstructions: `
+1. Install dependencies: pip install -r requirements.txt
+2. Set up environment variables in .env file
+3. Run database migrations: alembic upgrade head
+4. Start the server: uvicorn app.main:app --reload
+5. Access API docs: http://localhost:8000/docs
+`,
+    nextSteps: 'Phase 2: Implement payment integration with Stripe',
+    mode: 'SIMULATED'
+  }
+}
+
 // ================== AGENT CLASSES ==================
 
 class ArchaeologistAgent {
