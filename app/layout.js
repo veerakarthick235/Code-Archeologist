@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Next.js MongoDB Template',
+  title: 'CodeArcheologist',
   description: 'A simple template with App Router, MongoDB, and shadcn/ui',
 }
 
