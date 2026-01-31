@@ -511,9 +511,9 @@ MIT License - feel free to use this for learning, demos, and hackathons!
 ## 📧 Contact & Support
 
 For questions, issues, or collaboration:
-- GitHub Issues: [https://github.com/veerakarthick235/Code-Archeologist]
-- Email: [veerakarthick235@gmail.com]
-- Demo: [https://code-archeologist-ten.vercel.app/]
+- GitHub Issues: https://github.com/veerakarthick235/Code-Archeologist
+- Email: veerakarthick235@gmail.com
+- Demo: https://code-archeologist-ten.vercel.app/
 
 ---
 
