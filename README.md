@@ -92,7 +92,7 @@ CodeArcheologist is a production-ready system that demonstrates how multi-agent 
 **Backend**
 - Next.js 14 API Routes (Node.js)
 - MongoDB for project persistence
-- Google Gemini AI (gemini-2.0-flash)
+- Google Gemini AI (gemini-3.0-flash)
 - Intelligent fallback to demo mode
 
 **Frontend**
@@ -429,7 +429,7 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 ```javascript
 // In /app/app/api/[[...path]]/route.js
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.0-flash', // or 'gemini-2.5-pro' for better reasoning
+  model: 'gemini-3.0-preview', // or 'gemini-3-preview' for better reasoning
   generationConfig: {
     temperature: 0.4, // Lower = more deterministic
     maxOutputTokens: 8192,
