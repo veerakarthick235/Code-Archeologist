@@ -35,47 +35,6 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 
-const SAMPLE_LEGACY_CODE = `<?php
-// Legacy PHP E-commerce System (Circa 2010)
-// WARNING: Contains security vulnerabilities and deprecated code
-
-// Direct database connection (SQL Injection vulnerable)
-$db_host = "localhost";
-$db_user = "root";
-$db_pass = "password123"; // Hard-coded password!
-$db_name = "shop_db";
-
-$conn = mysql_connect($db_host, $db_user, $db_pass); // Deprecated function
-mysql_select_db($db_name, $conn);
-
-// Get user input without sanitization
-$user_id = $_GET['id'];
-$query = "SELECT * FROM users WHERE id = " . $user_id; // SQL Injection!
-$result = mysql_query($query);
-
-while($row = mysql_fetch_array($result)) {
-    echo "Username: " . $row['username'] . "<br>";
-    echo "Email: " . $row['email'] . "<br>";
-}
-
-// Product checkout function
-function process_payment($amount, $card_number) {
-    // Storing credit card in plain text (Major security issue!)
-    $query = "INSERT INTO payments (card_number, amount) VALUES ('$card_number', '$amount')";
-    mysql_query($query);
-    
-    // No error handling
-    return true;
-}
-
-// Admin check with weak authentication
-if($_SESSION['role'] == 'admin') {
-    // Vulnerable to session hijacking
-    include($_GET['page'] . '.php'); // File inclusion vulnerability
-}
-
-mysql_close($conn);
-?>`
 
 export default function App() {
   const [projectName, setProjectName] = useState('')
